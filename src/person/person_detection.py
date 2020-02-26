@@ -9,7 +9,7 @@ from src.person.centroid_tracker import CentroidTracker
 from src.person.trackable_object import TraceableObject
 from imutils.video import VideoStream
 from imutils.video import FPS
-from settings import CAFFE_MODEL, CAFFE_PROTEXT, DETECTION_CONFIDENT, SKIP_FRAMES, CLASSES
+from src.settings import CAFFE_MODEL, CAFFE_PROTEXT, DETECTION_CONFIDENT, CLASSES
 
 
 def detect_person():
@@ -32,7 +32,7 @@ def detect_person():
     # instantiate our centroid tracker, then initialize a list to store each of our dlib correlation trackers,
     # followed by a dictionary to map each unique object ID to a Traceable Object
     ct = CentroidTracker(max_disappeared=40, max_distance=50)
-    trackers = []
+    # trackers = []
     traceable_objects = {}
 
     # initialize the total number of frames processed thus far, along with the total number of objects
@@ -59,7 +59,7 @@ def detect_person():
 
         # initialize the current status along with our list of bounding box rectangles returned by
         # either (1) our object detector or (2) the correlation trackers
-        status = "Waiting"
+        # status = "Waiting"
         rects = []
 
         # check to see if we should run a more computationally expensive object detection method to aid our tracker
@@ -166,37 +166,38 @@ def detect_person():
         # loop over the info tuples and draw them on our frame
         for (i, (k, v)) in enumerate(info):
             text = "{}: {}".format(k, v)
-            cv2.putText(frame, text, (10, H - ((i * 20) + 20)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
+            print(text)
+            # cv2.putText(frame, text, (10, H - ((i * 20) + 20)), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
 
         # check to see if we should write the frame to disk
         if writer is not None:
             writer.write(frame)
 
         # show the output frame
-        cv2.imshow("Frame", frame)
-        key = cv2.waitKey(1) & 0xFF
+        # cv2.imshow("Frame", frame)
+        # key = cv2.waitKey(1) & 0xFF
 
         # if the `q` key was pressed, break from the loop
-        if key == ord("q"):
-            break
+        # if key == ord("q"):
+        #     break
 
         # increment the total number of frames processed thus far and then update the FPS counter
         totalFrames += 1
         fps.update()
 
     # stop the timer and display FPS information
-    fps.stop()
-    print("[INFO] elapsed time: {:.2f}".format(fps.elapsed()))
-    print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
+    # fps.stop()
+    # print("[INFO] elapsed time: {:.2f}".format(fps.elapsed()))
+    # print("[INFO] approx. FPS: {:.2f}".format(fps.fps()))
 
     # check to see if we need to release the video writer pointer
-    if writer is not None:
-        writer.release()
+    # if writer is not None:
+    #     writer.release()
 
-    vs.release()
+    # vs.release()
 
     # close any open windows
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':

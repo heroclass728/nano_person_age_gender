@@ -1,4 +1,5 @@
 .idea
 /venv/
 /people-counting-opencv/
-/src/utils/model/person/
+__pycache__
+*.pyc

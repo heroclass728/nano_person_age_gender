@@ -2,3 +2,4 @@ scipy
 imutils
 dlib
 numpy
+opencv-python

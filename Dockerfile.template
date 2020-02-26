@@ -1,0 +1,103 @@
+FROM balenalib/jetson-nano-ubuntu:bionic as buildstep
+
+WORKDIR /usr/src/app
+
+COPY ./deb/cuda-repo-l4t-10-0-local-10.0.326_1.0-1_arm64.deb .
+COPY ./deb/libcudnn7_7.6.3.28-1+cuda10.0_arm64.deb .
+COPY ./deb/libcudnn7-dev_7.6.3.28-1+cuda10.0_arm64.deb .
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN \
+    dpkg -i cuda-repo-l4t-10-0-local-10.0.326_1.0-1_arm64.deb \
+    libcudnn7_7.6.3.28-1+cuda10.0_arm64.deb \
+    libcudnn7-dev_7.6.3.28-1+cuda10.0_arm64.deb && \
+    apt-key add /var/cuda-repo-10-0-local-10.0.326/*.pub && \
+    apt-get update && \
+    apt-get install cuda-compiler-10-0 cuda-samples-10-0 -y && \
+    rm -rf *.deb && \
+    dpkg --remove cuda-repo-l4t-10-0-local-10.0.326 && \
+    dpkg -P cuda-repo-l4t-10-0-local-10.0.326 && \
+    echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf && \
+    ldconfig
+
+RUN \
+    export SMS=53 && \
+    cd /usr/local/cuda-10.0/samples/0_Simple/clock/ && make -j8 && \
+    cd /usr/local/cuda-10.0/samples/1_Utilities/deviceQuery/ && make -j8 && \
+    cd /usr/local/cuda-10.0/samples/2_Graphics/simpleTexture3D/ && make -j8 && \
+    cd /usr/local/cuda-10.0/samples/2_Graphics/simpleGL/ && make -j8 && \
+    cd /usr/local/cuda-10.0/samples/3_Imaging/postProcessGL/ && make -j8 && \
+    cd /usr/local/cuda-10.0/samples/5_Simulations/smokeParticles && make -j8
+
+RUN \
+    rm -rf /usr/local/cuda-10.0/targets && \
+    rm -rf /usr/local/cuda-10.0/doc
+
+FROM balenalib/jetson-nano-ubuntu:bionic as final
+
+COPY --from=buildstep /usr/local/cuda-10.0 /usr/local/cuda-10.0
+
+# If planning to only use GPU API, without CUDA runtime API,
+# the two lines below can be commented out
+COPY --from=buildstep /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gnu
+COPY --from=buildstep /usr/local/lib /usr/local/lib
+
+COPY ./deb/nvidia_drivers.tbz2 .
+COPY ./deb/config.tbz2 .
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# If planning to do only headles GPU computing, without video
+# display do not install xorg
+RUN apt-get update && apt-get install lbzip2 xorg -y && \
+    tar xjf nvidia_drivers.tbz2 -C / && \
+    tar xjf config.tbz2 -C / --exclude=etc/hosts --exclude=etc/hostname && \
+    echo "/usr/lib/aarch64-linux-gnu/tegra" > /etc/ld.so.conf.d/nvidia-tegra.conf && ldconfig && \
+    rm -rf *.tbz2
+
+# base-image for python on any machine using a template variable,
+# see more about dockerfile templates here: https://www.balena.io/docs/learn/develop/dockerfile/
+
+# use `install_packages` if you need to install dependencies,
+# for instance if you need git, just uncomment the line below.
+# RUN install_packages git
+
+WORKDIR /usr/src/app
+
+RUN apt-get update && apt-get install -y cmake python3-dev python3-numpy python3-pip git
+RUN apt-get install -y python3-scipy
+
+RUN pip3 install setuptools Cython dlib
+RUN pip3 install imutils
+
+COPY ./builld_opencv_4_1.sh ./build_opencv_4_1.sh
+COPY ./deb/opencv-4.1.0.zip .
+COPY ./deb/opencv_contrib-4.1.0.zip .
+RUN ./build_opencv_4_1.sh
+
+#RUN apt-get install -y libhdf5-serial-dev hdf5-tools libhdf5-dev zlib1g-dev zip libjpeg8-dev
+#
+#RUN pip3 install -U grpcio absl-py py-cpuinfo psutil portpicker six mock requests gast h5py astor termcolor protobuf keras-applications keras-preprocessing wrapt google-pasta
+# TF-2.0
+#RUN pip3 install --pre --extra-index-url https://developer.download.nvidia.com/compute/redist/jp/v43 tensorflow-gpu==2.0.0+nv20.1
+
+COPY requirements.txt requirements.txt
+
+# pip install python deps from requirements.txt on the resin.io build server
+
+# This will copy all files in our root to the working  directory in the container
+COPY ./src ./src
+COPY .dockerignore .dockerignore
+COPY Dockerfile.template Dockerfile.template
+COPY README.md README.md
+
+#RUN wget  -O /utils/model/gender_model_weights.h5 "https://drive.google.com/file/d/1YCox_4kJ-BYeXq27uUbasu--yz28zUMV/view?usp=sharing"
+#RUN wget  -O /utils/model/age_model_weights.h5 "https://drive.google.com/file/d/1wUXRVlbsni2FN9-jkS_f4UTUrm1bRLyk/view?usp=sharing"
+
+# Enable udevd so that plugged dynamic hardware devices show up in our container.
+ENV UDEV=1
+
+# main.py will run when container starts up on the device
+#CMD ["python3","-u","src/app.py"]
+CMD ["sleep", "infinity"]

@@ -1,10 +1,9 @@
 import os
 
-from utils.folder_file_manager import make_directory_if_not_exists
-
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
-PERSON_MODEL_DIR = make_directory_if_not_exists(os.path.join(CUR_DIR, 'utils', 'model', 'person'))
+PERSON_MODEL_DIR = os.path.join(CUR_DIR, 'utils', 'model', 'person')
+# os.makedirs(PERSON_MODEL_DIR, exist_ok=True)
 
 CAFFE_MODEL = os.path.join(PERSON_MODEL_DIR, 'MobileNetSSD_deploy.caffemodel')
 CAFFE_PROTEXT = os.path.join(PERSON_MODEL_DIR, 'MobileNetSSD_deploy.prototxt')
