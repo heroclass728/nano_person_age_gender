@@ -1,5 +1,6 @@
 import os
 import ntpath
+import logging
 
 
 def make_directory_if_not_exists(dir_path):
@@ -43,3 +44,16 @@ def save_file(content, filename, method):
     file.close()
 
     return
+
+
+def log_print(info_str, only_print=False):
+
+    logging.basicConfig(level=logging.INFO,
+                        format='%(asctime)s %(message)s',
+                        datefmt='%d/%b/%Y %H:%M:%S',
+                        filename='result.log'
+                        )
+    # print(info_str)
+
+    if not only_print:
+        logging.info(info_str)

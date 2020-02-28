@@ -3,3 +3,4 @@ imutils
 dlib
 numpy
 opencv-python
+keras

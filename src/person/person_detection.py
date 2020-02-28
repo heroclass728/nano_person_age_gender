@@ -7,9 +7,13 @@ import cv2
 
 from src.person.centroid_tracker import CentroidTracker
 from src.person.trackable_object import TraceableObject
+from src.age_gender.age_gender_estimation import AgeGenderDetector
 from imutils.video import VideoStream
 from imutils.video import FPS
-from src.settings import CAFFE_MODEL, CAFFE_PROTEXT, DETECTION_CONFIDENT, CLASSES
+from src.settings import CAFFE_MODEL, CAFFE_PROTEXT, DETECTION_CONFIDENT, CLASSES, LOCAL
+
+
+age_gender = AgeGenderDetector()
 
 
 def detect_person():
@@ -19,15 +23,16 @@ def detect_person():
 
     # if a video path was not supplied, grab a reference to the webcam
     print("[INFO] starting video stream...")
-    vs = VideoStream(src=0).start()
+    # vs = VideoStream(src=0).start()
+    vs = cv2.VideoCapture("/media/mensa/Data/Task/JetsonPersonAgeGender/VID-20200215-WA0004.mp4")
     time.sleep(2.0)
 
     # initialize the video writer (we'll instantiate later if need be)
     writer = None
 
     # initialize the frame dimensions (we'll set them as soon as we read the first frame from the video)
-    W = None
-    H = None
+    width = None
+    height = None
 
     # instantiate our centroid tracker, then initialize a list to store each of our dlib correlation trackers,
     # followed by a dictionary to map each unique object ID to a Traceable Object
@@ -37,7 +42,7 @@ def detect_person():
 
     # initialize the total number of frames processed thus far, along with the total number of objects
     # that have moved either up or down
-    totalFrames = 0
+    total_frames = 0
     total = 0
 
     # start the frames per second throughput estimator
@@ -46,7 +51,10 @@ def detect_person():
     # loop over frames from the video stream
     while True:
         # grab the next frame and handle if we are reading from either VideoCapture or VideoStream
-        frame = vs.read()
+        # frame = vs.read()
+        _, frame = vs.read()
+
+        frame = age_gender.detect_one_frame(img=frame)
 
         # resize the frame to have a maximum width of 500 pixels (the less data we have, the faster we can process it),
         # then convert the frame from BGR to RGB for dlib
@@ -54,8 +62,8 @@ def detect_person():
         rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         # if the frame dimensions are empty, set them
-        if W is None or H is None:
-            (H, W) = frame.shape[:2]
+        if width is None or height is None:
+            (height, width) = frame.shape[:2]
 
         # initialize the current status along with our list of bounding box rectangles returned by
         # either (1) our object detector or (2) the correlation trackers
@@ -69,7 +77,7 @@ def detect_person():
         trackers = []
 
         # convert the frame to a blob and pass the blob through the network and obtain the detections
-        blob = cv2.dnn.blobFromImage(frame, 0.007843, (W, H), 127.5)
+        blob = cv2.dnn.blobFromImage(frame, 0.007843, (width, height), 127.5)
         net.setInput(blob)
         detections = net.forward()
 
@@ -88,13 +96,13 @@ def detect_person():
                     continue
 
                 # compute the (x, y)-coordinates of the bounding box for the object
-                box = detections[0, 0, i, 3:7] * np.array([W, H, W, H])
-                (startX, startY, endX, endY) = box.astype("int")
+                box = detections[0, 0, i, 3:7] * np.array([width, height, width, height])
+                (start_x, start_y, end_x, end_y) = box.astype("int")
 
                 # construct a dlib rectangle object from the bounding box coordinates and
                 # then start the dlib correlation tracker
                 tracker = dlib.correlation_tracker()
-                rect = dlib.rectangle(startX, startY, endX, endY)
+                rect = dlib.rectangle(start_x, start_y, end_x, end_y)
                 tracker.start_track(rgb, rect)
 
                 # add the tracker to our list of trackers so we can utilize it during skip frames
@@ -113,13 +121,13 @@ def detect_person():
             pos = tracker.get_position()
 
             # unpack the position object
-            startX = int(pos.left())
-            startY = int(pos.top())
-            endX = int(pos.right())
-            endY = int(pos.bottom())
+            start_x = int(pos.left())
+            start_y = int(pos.top())
+            end_x = int(pos.right())
+            end_y = int(pos.bottom())
 
             # add the bounding box coordinates to the rectangles list
-            rects.append((startX, startY, endX, endY))
+            rects.append((start_x, start_y, end_x, end_y))
 
         # use the centroid tracker to associate the (1) old object centroids with (2) the newly computed object
         # centroids
@@ -174,15 +182,16 @@ def detect_person():
             writer.write(frame)
 
         # show the output frame
-        # cv2.imshow("Frame", frame)
-        # key = cv2.waitKey(1) & 0xFF
+        if LOCAL:
+            cv2.imshow("Frame", frame)
+            key = cv2.waitKey(1) & 0xFF
 
         # if the `q` key was pressed, break from the loop
-        # if key == ord("q"):
-        #     break
+            if key == ord("q"):
+                break
 
         # increment the total number of frames processed thus far and then update the FPS counter
-        totalFrames += 1
+        total_frames += 1
         fps.update()
 
     # stop the timer and display FPS information
@@ -194,10 +203,10 @@ def detect_person():
     # if writer is not None:
     #     writer.release()
 
-    # vs.release()
+    vs.release()
 
     # close any open windows
-    # cv2.destroyAllWindows()
+    cv2.destroyAllWindows()
 
 
 if __name__ == '__main__':
