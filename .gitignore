@@ -1,7 +1,6 @@
 .idea
 /venv/
 /people-counting-opencv/
-/src/utils/model/person/
 /deb/
 /src/age_gender/age_model_weights.h5
 /src/age_gender/gender_model_weights.h5
