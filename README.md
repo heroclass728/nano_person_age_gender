@@ -57,7 +57,7 @@ The main content is in src folder
     ``` 
     
     * Download the models to detect person from https://drive.google.com/file/d/10AXoNg4y6U1fwvvlhkjxHrXf3b4GXdtb/view?usp=sharing and 
-    copy them to src/utils/model/person.
+    copy them to src/person. Also download the models to estimate age and gender from and copy them to src/age_gender.
 
 ## Project Execution
 
