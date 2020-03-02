@@ -3,3 +3,5 @@
 /people-counting-opencv/
 __pycache__
 *.pyc
+.git
+

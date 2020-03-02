@@ -7,13 +7,13 @@ import cv2
 
 from src.person.centroid_tracker import CentroidTracker
 from src.person.trackable_object import TraceableObject
-from src.age_gender.age_gender_estimation import AgeGenderDetector
-from imutils.video import VideoStream
+# from src.age_gender.age_gender_estimation import AgeGenderDetector
+# from imutils.video import VideoStream
 from imutils.video import FPS
 from src.settings import CAFFE_MODEL, CAFFE_PROTEXT, DETECTION_CONFIDENT, CLASSES, LOCAL
 
 
-age_gender = AgeGenderDetector()
+# age_gender = AgeGenderDetector()
 
 
 def detect_person():
@@ -53,8 +53,6 @@ def detect_person():
         # grab the next frame and handle if we are reading from either VideoCapture or VideoStream
         # frame = vs.read()
         _, frame = vs.read()
-
-        frame = age_gender.detect_one_frame(img=frame)
 
         # resize the frame to have a maximum width of 500 pixels (the less data we have, the faster we can process it),
         # then convert the frame from BGR to RGB for dlib

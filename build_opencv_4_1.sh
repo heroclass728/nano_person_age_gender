@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 #/bin/sh
 
 sudo apt-get update -y

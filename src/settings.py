@@ -15,6 +15,9 @@ GENDER_MODEL_PATH = os.path.join(MODEL_DIR, 'gender_model_weights.h5')
 
 DETECTION_CONFIDENT = 0.4
 SKIP_FRAMES = 30
+TRACK_CYCLE = 20
+MARGIN = 10
+VIDEO_PATH = ""
 CLASSES = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle", "bus", "car", "cat", "chair", "cow",
            "diningtable", "dog", "horse", "motorbike", "person", "pottedplant", "sheep", "sofa", "train", "tvmonitor"]
 
