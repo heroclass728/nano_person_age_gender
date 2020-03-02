@@ -4,3 +4,4 @@ dlib
 numpy
 opencv-python
 keras
+tensorflow==1.13.1

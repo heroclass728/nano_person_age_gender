@@ -126,12 +126,12 @@ class FaceDetector:
     def main(self):
 
         # cap = cv2.VideoCapture(0)
-        cap = cv2.VideoCapture()
+        cap = cv2.VideoCapture(VIDEO_PATH)
         cnt = 0
 
         while True:
 
-            ret, img = cap.read(VIDEO_PATH)
+            ret, img = cap.read()
             # img = self.detect_one_frame(img=img)
             img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
             result_image = img.copy()
